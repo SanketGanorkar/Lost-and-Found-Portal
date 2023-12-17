@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost and Found Portal</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Lost and Found Portal</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="add-item-page">Report Found Item <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% for item in items %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ item.item_description }}</h5>
+                <p class="card-text">Category: {{ item.item_category }}</p>
+                <p class="card-text">Location: {{ item.location }}</p>
+                <p class="card-text">Contact Number: {{ item.student.contact_number }}</p>
+                <button class="btn btn-primary view-location-description" data-toggle="modal" data-target="#locationDescriptionModal{{ item.id }}">Location Description</button>
+                <button class="btn btn-secondary view-image" data-toggle="modal" data-target="#imageModal{{ item.id }}">View Image</button>
+
+                {% if item.student.user != request.user %}
+                    <!-- Show Claim button and form only if the current user did not add the item -->
+                    <button class="btn btn-success claim-btn" data-toggle="modal" data-target="#claimModal{{ item.id }}">Claim</button>
+
+                    <!-- Claim Modal -->
+                    <div class="modal fade" id="claimModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="claimModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="claimModalLabel">Claim Item</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Answer the verification question to claim the item:</p>
+                                    <p>{{ item.verification_question }}</p>
+                                    <form method="post" action="{% url 'claim_item' item.id %}">
+                                        {% csrf_token %}
+                                        <label>
+                                            <input type="radio" name="verification_answer" value="1" required> {{ item.choice1 }}
+                                        </label><br>
+                                        <label>
+                                            <input type="radio" name="verification_answer" value="2"> {{ item.choice2 }}
+                                        </label><br>
+                                        <label>
+                                            <input type="radio" name="verification_answer" value="3"> {{ item.choice3 }}
+                                        </label><br>
+                                        <label>
+                                            <input type="radio" name="verification_answer" value="4"> {{ item.choice4 }}
+                                        </label><br>
+                                        <button type="submit" class="btn btn-success">Submit Claim</button>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="locationDescriptionModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="locationDescriptionModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="locationDescriptionModalLabel">Item Description</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Location Description: {{ item.description }}</p>
+                            <!-- Add more fields as needed -->
+                        </div>
+                        <!-- Add footer or additional sections as needed -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Modal -->
+        <div class="modal fade" id="imageModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="imageModalLabel">Item Image</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Display the image here -->
+                        <img src="{{ item.item_image.url }}" class="img-fluid" alt="{{ item.item_description }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<script>
+    // JavaScript to update location value when the modal is shown
+    $('#locationDescriptionModal{{ item.id }}').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        var location = button.data('location'); // Extract info from data-* attributes
+        $('#locationValue').text(location); // Update the location value in the modal
+    });
+</script>
+
+
+        <!-- Image Modal -->
+        <div class="modal fade" id="imageModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+            <!-- ... (existing modal code) -->
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Include Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
